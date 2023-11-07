@@ -34,6 +34,9 @@ async function run() {
       .db("classicHotelDB")
       .collection("featuredRooms");
     const roomsCollection = client.db("classicHotelDB").collection("rooms");
+    const myBookingsCollection = client
+      .db("classicHotelDB")
+      .collection("bookings");
 
     // get all featured rooms
     app.get("/featuredRooms", async (req, res) => {
@@ -44,6 +47,27 @@ async function run() {
     // get all rooms
     app.get("/rooms", async (req, res) => {
       const result = await roomsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // add to  bookings
+    app.post("/bookings", async (req, res) => {
+      const newBooking = req.body;
+      // console.log(newBooking);
+      const result = await myBookingsCollection.insertOne(newBooking);
+      // console.log(newBooking);
+      res.send(result);
+    });
+
+    // get  my bookings data
+    app.get("/myBookings", async (req, res) => {
+      let query = {};
+      if (req?.query?.email) {
+        query = { email: req?.query?.email };
+      }
+      // console.log(query);
+
+      const result = await myBookingsCollection.find(query).toArray();
       res.send(result);
     });
 
