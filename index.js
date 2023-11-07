@@ -33,10 +33,17 @@ async function run() {
     const featuredRoomsCollection = client
       .db("classicHotelDB")
       .collection("featuredRooms");
+    const roomsCollection = client.db("classicHotelDB").collection("rooms");
 
     // get all featured rooms
     app.get("/featuredRooms", async (req, res) => {
       const result = await featuredRoomsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // get all rooms
+    app.get("/rooms", async (req, res) => {
+      const result = await roomsCollection.find().toArray();
       res.send(result);
     });
 
