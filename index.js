@@ -12,7 +12,7 @@ app.use(cors());
 
 // mongodb
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6rml2ff.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -57,6 +57,15 @@ async function run() {
       const result = await myBookingsCollection.insertOne(newBooking);
       // console.log(newBooking);
       res.send(result);
+    });
+
+    // delete single booking
+    app.delete("/myBookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await myBookingsCollection.deleteOne(query);
+      res.send(result);
+      console.log(result);
     });
 
     // get  my bookings data
