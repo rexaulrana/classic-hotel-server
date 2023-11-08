@@ -65,10 +65,10 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await myBookingsCollection.deleteOne(query);
       res.send(result);
-      console.log(result);
+      // console.log(result);
     });
 
-    // get  my bookings data
+    // get  my bookings data by email
     app.get("/myBookings", async (req, res) => {
       let query = {};
       if (req?.query?.email) {
@@ -77,6 +77,31 @@ async function run() {
       // console.log(query);
 
       const result = await myBookingsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // get single booking
+    app.get("/myBookings/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await myBookingsCollection.findOne(query);
+      res.send(result);
+      console.log(result);
+    });
+
+    // update single booking data
+    app.put("/myBookings/:id", async (req, res) => {
+      // console.log(object);
+      const id = req.params.id;
+      const newDate = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          date: newDate.date,
+        },
+      };
+      const result = await myBookingsCollection.updateOne(filter, updateDoc);
+      console.log(newDate.date);
       res.send(result);
     });
 
