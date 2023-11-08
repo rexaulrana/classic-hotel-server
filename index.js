@@ -113,6 +113,11 @@ async function run() {
       res.send(result);
       // console.log(newReview);
     });
+    // get all reviews
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewsCollection.find().toArray();
+      res.send(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
