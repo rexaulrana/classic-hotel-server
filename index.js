@@ -1,18 +1,42 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv").config();
+const cookieParser = require("cookie-parser");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 // port
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
+app.use(cookieParser());
+
+// custom middleware
+const verifyToken = async (req, res, next) => {
+  const token = req.cookies?.token;
+  // console.log("veri", token);
+  if (!token) {
+    return res.status(403).send({ message: "Forbidden Access" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "Unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 
 // mongodb
 
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.6rml2ff.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -39,6 +63,30 @@ async function run() {
       .collection("bookings");
     const reviewsCollection = client.db("classicHotelDB").collection("reviews");
 
+    // jwt token
+    app.post("/jwt", (req, res) => {
+      const user = req.body;
+      // console.log("token:", req.cookies.token);
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN, {
+        expiresIn: "1h",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+      // console.log(token);
+    });
+    app.post("/logout", (req, res) => {
+      const user = req.body;
+      res
+        .clearCookie("token", {
+          maxAge: 0,
+        })
+        .send({ message: success });
+    });
     // get all featured rooms
     app.get("/featuredRooms", async (req, res) => {
       const result = await featuredRoomsCollection.find().toArray();
@@ -70,7 +118,12 @@ async function run() {
     });
 
     // get  my bookings data by email
-    app.get("/myBookings", async (req, res) => {
+    app.get("/myBookings", verifyToken, async (req, res) => {
+      // console.log("cook", req.cookies.token);
+      console.log("owner", req.user);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send({ message: "Forbidden Access" });
+      }
       let query = {};
       if (req?.query?.email) {
         query = { email: req?.query?.email };
