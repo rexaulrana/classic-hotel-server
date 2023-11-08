@@ -37,6 +37,7 @@ async function run() {
     const myBookingsCollection = client
       .db("classicHotelDB")
       .collection("bookings");
+    const reviewsCollection = client.db("classicHotelDB").collection("reviews");
 
     // get all featured rooms
     app.get("/featuredRooms", async (req, res) => {
@@ -86,7 +87,7 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await myBookingsCollection.findOne(query);
       res.send(result);
-      console.log(result);
+      // console.log(result);
     });
 
     // update single booking data
@@ -101,8 +102,16 @@ async function run() {
         },
       };
       const result = await myBookingsCollection.updateOne(filter, updateDoc);
-      console.log(newDate.date);
+      // console.log(newDate.date);
       res.send(result);
+    });
+
+    // add review
+    app.post("/reviews", async (req, res) => {
+      const newReview = req.body;
+      const result = await reviewsCollection.insertOne(newReview);
+      res.send(result);
+      // console.log(newReview);
     });
 
     await client.db("admin").command({ ping: 1 });
