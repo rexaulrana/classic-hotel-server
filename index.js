@@ -1,10 +1,10 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv").config();
-const cookieParser = require("cookie-parser");
+require("dotenv").config();
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 
 // port
 const port = process.env.PORT || 5000;
@@ -55,7 +55,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
 
     const featuredRoomsCollection = client
@@ -89,7 +89,7 @@ async function run() {
         .clearCookie("token", {
           maxAge: 0,
         })
-        .send({ message: success });
+        .send({ message: "success" });
     });
     // get all featured rooms
     app.get("/featuredRooms", async (req, res) => {
@@ -99,7 +99,17 @@ async function run() {
 
     // get all rooms
     app.get("/rooms", async (req, res) => {
-      const result = await roomsCollection.find().toArray();
+      const filter = req.query;
+      // console.log(filter);
+      const query = {};
+      const options = {
+        sort: {
+          price_per_night: filter.sort === "asc" ? 1 : -1,
+        },
+      };
+
+      const result = await roomsCollection.find(query, options).toArray();
+      // console.log(query);
       res.send(result);
     });
 
@@ -176,7 +186,7 @@ async function run() {
       res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
